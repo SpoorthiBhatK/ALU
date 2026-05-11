@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module ALU_Project #(parameter N = 8, C = 4)(
+module my_alu #(parameter N = 8, C = 4)(
 
     input  wire               CLK,
     input  wire               RST,
@@ -153,32 +153,32 @@ always @(posedge CLK or posedge RST) begin
 
             // INC A
             4: begin
-                if(INP_VALID == 2'b01)
-                    RES_TEMP <= OPA + 1;
+                if(INP_VALID == 2'b01 || INP_VALID == 2'b11)
+                    RES_TEMP <= (OPA + 1) & 8'hFF;
                 else
                     ERR_TEMP <= 1'b1;
             end
 
             // DEC A
             5: begin
-                if(INP_VALID == 2'b01)
-                    RES_TEMP <= OPA - 1;
+                if(INP_VALID == 2'b01 || INP_VALID == 2'b11)
+                    RES_TEMP <= (OPA - 1) & 8'hFF;
                 else
                     ERR_TEMP <= 1'b1;
             end
 
             // INC B
             6: begin
-                if(INP_VALID == 2'b10)
-                    RES_TEMP <= OPB + 1;
+               if(INP_VALID == 2'b10 || INP_VALID == 2'b11)
+                    RES_TEMP <= (OPB + 1) & 8'hFF;
                 else
                     ERR_TEMP <= 1'b1;
             end
 
             // DEC B
             7: begin
-                if(INP_VALID == 2'b10)
-                    RES_TEMP <= OPB - 1;
+               if(INP_VALID == 2'b10 || INP_VALID == 2'b11)
+                    RES_TEMP <= (OPB - 1) & 8'hFF;
                 else
                     ERR_TEMP <= 1'b1;
             end
@@ -225,22 +225,15 @@ always @(posedge CLK or posedge RST) begin
                     else begin
                         COUNT1 <= COUNT1 + 1;
                     end
-                end
+		end
 
                 else begin
 
-                    if(COUNT2 == 2'd2) begin
+		    RES_TEMP <= 0;
+		    ERR_TEMP <= 1'b1;
 
-                        ERR_TEMP <= 1'b1;
-                        COUNT2 <= 1;
-
-                    end
-
-                    else begin
-                        COUNT2 <= COUNT2 + 1;
-                    end
-                end
-            end
+		end
+		end
 
             // MUL2
             10: begin
@@ -272,18 +265,11 @@ always @(posedge CLK or posedge RST) begin
 
                 else begin
 
-                    if(COUNT4 == 2'd2) begin
+		    RES_TEMP <= 0;
+		    ERR_TEMP <= 1'b1;
 
-                        ERR_TEMP <= 1'b1;
-                        COUNT4 <= 1;
-
-                    end
-
-                    else begin
-                        COUNT4 <= COUNT4 + 1;
-                    end
-                end
-            end
+		end
+		end
 
             // SADD
             11: begin
@@ -345,7 +331,7 @@ always @(posedge CLK or posedge RST) begin
             // AND
             0: begin
                 if(INP_VALID == 2'b11)
-                    RES_TEMP <= OPA & OPB;
+                    RES_TEMP <= {{N{1'b0}}, (OPA & OPB)};
                 else
                     ERR_TEMP <= 1'b1;
             end
@@ -353,7 +339,7 @@ always @(posedge CLK or posedge RST) begin
             // NAND
             1: begin
                 if(INP_VALID == 2'b11)
-                    RES_TEMP <= ~(OPA & OPB);
+                    RES_TEMP <= {{N{1'b0}}, (~(OPA & OPB) & 8'hFF)};
                 else
                     ERR_TEMP <= 1'b1;
             end
@@ -361,7 +347,7 @@ always @(posedge CLK or posedge RST) begin
             // OR
             2: begin
                 if(INP_VALID == 2'b11)
-                    RES_TEMP <= OPA | OPB;
+                    RES_TEMP <= {{N{1'b0}}, (OPA | OPB)};
                 else
                     ERR_TEMP <= 1'b1;
             end
@@ -369,7 +355,7 @@ always @(posedge CLK or posedge RST) begin
             // NOR
             3: begin
                 if(INP_VALID == 2'b11)
-                    RES_TEMP <= ~(OPA | OPB);
+                    RES_TEMP <= {{N{1'b0}}, (~(OPA | OPB) & 8'hFF)};
                 else
                     ERR_TEMP <= 1'b1;
             end
@@ -377,63 +363,63 @@ always @(posedge CLK or posedge RST) begin
             // XOR
             4: begin
                 if(INP_VALID == 2'b11)
-                    RES_TEMP <= OPA ^ OPB;
-                else
+                    RES_TEMP <= {{N{1'b0}}, (OPA ^ OPB)};
+		else
                     ERR_TEMP <= 1'b1;
             end
 
             // XNOR
             5: begin
-                if(INP_VALID == 2'b11)
-                    RES_TEMP <= ~(OPA ^ OPB);
+                if(INP_VALID == 2'b11 )
+                    RES_TEMP <= {{N{1'b0}}, (~(OPA ^ OPB) & 8'hFF)};
                 else
                     ERR_TEMP <= 1'b1;
             end
 
             // NOT A
             6: begin
-                if(INP_VALID == 2'b11)
-                    RES_TEMP <= ~OPA;
+                if(INP_VALID == 2'b01 || INP_VALID == 2'b11)
+                    RES_TEMP <= {{N{1'b0}}, (~OPA & 8'hFF)};
                 else
                     ERR_TEMP <= 1'b1;
             end
 
             // NOT B
             7: begin
-                if(INP_VALID == 2'b11)
-                    RES_TEMP <= ~OPB;
+               if(INP_VALID == 2'b10 || INP_VALID == 2'b11)
+                    RES_TEMP <= {{N{1'b0}}, (~OPB & 8'hFF)};
                 else
                     ERR_TEMP <= 1'b1;
             end
 
             // SHR A
             8: begin
-                if(INP_VALID == 2'b01)
-                    RES_TEMP <= OPA >> 1;
+                if(INP_VALID == 2'b01 || INP_VALID == 2'b11)
+                    RES_TEMP <= {{N{1'b0}}, (OPA >> 1)};
                 else
                     ERR_TEMP <= 1'b1;
             end
 
             // SHL A
             9: begin
-                if(INP_VALID == 2'b01)
-                    RES_TEMP <= OPA << 1;
+               if(INP_VALID == 2'b01 || INP_VALID == 2'b11)
+                    RES_TEMP <=  {{N{1'b0}}, OPA << 1};
                 else
                     ERR_TEMP <= 1'b1;
             end
 
             // SHR B
             10: begin
-                if(INP_VALID == 2'b10)
-                    RES_TEMP <= OPB >> 1;
+                if(INP_VALID == 2'b10 || INP_VALID == 2'b11)
+                    RES_TEMP <= {{N{1'b0}}, (OPB >> 1)};
                 else
                     ERR_TEMP <= 1'b1;
             end
 
             // SHL B
             11: begin
-                if(INP_VALID == 2'b10)
-                    RES_TEMP <= OPB << 1;
+                if(INP_VALID == 2'b10 || INP_VALID == 2'b11)
+                    RES_TEMP <= {{N{1'b0}}, (OPB << 1)};
                 else
                     ERR_TEMP <= 1'b1;
             end
@@ -441,40 +427,46 @@ always @(posedge CLK or posedge RST) begin
             // ROL
             12: begin
 
-                if(INP_VALID == 2'b11) begin
+		    if(INP_VALID == 2'b11) begin
 
-                    if(OPB > 4'b1111)
-                        ERR_TEMP <= 1'b1;
+			ERR_TEMP <= |OPB[N-1:N/2];
 
-                    else
-                        RES_TEMP <=
-                            (OPA << OPB[2:0]) |
-                            (OPA >> (N - OPB[2:0]));
-                end
+			if(OPB[2:0] == 0)
+			    RES_TEMP <= OPA;
 
-                else begin
-                    ERR_TEMP <= 1'b1;
-                end
-            end
+			else
+			    RES_TEMP <= {{N{1'b0}},
+				         ((OPA << OPB[2:0]) |
+				          (OPA >> (N - OPB[2:0])))
+				        };
+		    end
+
+		    else begin
+			ERR_TEMP <= 1'b1;
+		    end
+		end
 
             // ROR
             13: begin
 
-                if(INP_VALID == 2'b11) begin
+		    if(INP_VALID == 2'b11) begin
 
-                    if(OPB > 4'b1111)
-                        ERR_TEMP <= 1'b1;
+			ERR_TEMP <= |OPB[N-1:N/2];
 
-                    else
-                        RES_TEMP <=
-                            (OPA >> OPB[2:0]) |
-                            (OPA << (N - OPB[2:0]));
-                end
+			if(OPB[2:0] == 0)
+			    RES_TEMP <= OPA;
 
-                else begin
-                    ERR_TEMP <= 1'b1;
-                end
-            end
+			else
+			    RES_TEMP <= {{N{1'b0}},
+				         ((OPA >> OPB[2:0]) |
+				          (OPA << (N - OPB[2:0])))
+				        };
+		    end
+
+		    else begin
+			ERR_TEMP <= 1'b1;
+		    end
+		end
 
             default: begin
                 ERR_TEMP <= 1'b1;
